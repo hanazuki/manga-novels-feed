@@ -46,7 +46,7 @@ def handler(event:, context:)
       maker.items.new_item do |item|
         url = item.link = "https://www.magnet-novels.com/novels/#{novel_id}/episodes/#{section['id']}"
         item.title = section['title']
-        item.date = Time.parse(section['public_time'])
+        item.date = Time.parse(section['public_time'] || section['latest_public_time'])
         item.guid.content = url
         item.guid.isPermaLink = true
       end
