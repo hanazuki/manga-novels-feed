@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: apterus
+
+Resources:
+  RssFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/
+      Handler: lambda/app.handler
+      Runtime: ruby2.5
+      MemorySize: 512
+      Timeout: 10
+      Environment: {}
+      Events:
+        Feed:
+          Type: Api
+          Properties:
+            Path: '/{novelId}'
+            Method: GET
