@@ -61,7 +61,7 @@ def handler(event:, context:)
   end
 
   rss_text = rss.to_s
-  rss_etag = Digest::SHA1.hexdigest(rss_text)
+  rss_etag = %q{"#{Digest::SHA1.hexdigest(rss_text)}"}
 
   {
     'statusCode' => 200,
