@@ -1,3 +1,4 @@
+require 'digest/sha1'
 require 'json'
 require 'net/http'
 require 'rss'
@@ -53,11 +54,16 @@ def handler(event:, context:)
     end
   end
 
+  rss_text = rss.to_s
+  rss_etag = Digest::SHA1.hexdigest(rss_text)
+
   {
     'statusCode' => 200,
-    'body' => rss.to_s,
+    'body' => rss_text,
     'headers' => {
       'Content-Type' => 'application/rdf+xml',
+      'Cache-Control' => 'public, s-maxage=600',
+      'ETag' => rss_etag,
     },
   }
 end
