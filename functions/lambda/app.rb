@@ -44,10 +44,16 @@ def handler(event:, context:)
     maker.items.do_sort = true
 
     novel_contents['data'].each do |section|
+      next if section['status'] == 0
+
+      unless published_at = section['public_time'] || section['latest_public_time']
+        next
+      end
+
       maker.items.new_item do |item|
         url = item.link = "https://www.magnet-novels.com/novels/#{novel_id}/episodes/#{section['id']}"
         item.title = section['title']
-        item.date = Time.parse(section['public_time'] || section['latest_public_time'])
+        item.date = Time.parse(published_at)
         item.guid.content = url
         item.guid.isPermaLink = true
       end
