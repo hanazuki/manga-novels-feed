@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: MAGNET MACROLINK RSS Generator
+Description: Manga/Novels RSS Generator
 
 Resources:
   RssFunction:
@@ -16,5 +16,5 @@ Resources:
         Feed:
           Type: Api
           Properties:
-            Path: '/{novelId}'
+            Path: '/{contentProvider}/{contentId}'
             Method: GET
