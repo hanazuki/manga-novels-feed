@@ -81,7 +81,7 @@ def handler(event:, context:)
     'statusCode' => 200,
     'body' => rss_text,
     'headers' => {
-      'Content-Type' => 'application/rdf+xml',
+      'Content-Type' => 'application/rss+xml',
       'Cache-Control' => 'public, s-maxage=600',
       'ETag' => rss_etag,
     },
