@@ -82,7 +82,7 @@ module Providers
         info['episodes'].each do |episode|
           next if episode['status'] == 'private'
 
-          unless published_at = episode['public_start'] || episode['member_publish_start']
+          unless published_at = episode['publish_start'] || episode['member_publish_start']
             next
           end
 
