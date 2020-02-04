@@ -3,11 +3,13 @@ ENV['TZ'] = 'UTC'
 require 'digest/sha1'
 require_relative '../lib/manga_novel_feeds'
 
+$providers = {}
+
 def handler(event:, context:)
   content_provider = event['pathParameters'].fetch('contentProvider')
   content_id = event['pathParameters'].fetch('contentId')
 
-  provider = MangaNovelFeeds::PROVIDERS.fetch(content_provider)
+  provider = $providers[content_provider] ||= MangaNovelFeeds::Providers.find(content_provider).new
   rss = provider.rss(content_id)
 
   rss_text = rss.to_s

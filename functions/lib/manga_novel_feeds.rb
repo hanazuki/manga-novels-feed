@@ -6,9 +6,22 @@ require 'uri'
 
 module MangaNovelFeeds
   module Providers
+    class << self
+      def find(name)
+        constants(false).each do |const|
+          klass = const_get(const)
+          return klass if klass.const_get(:NAME, false) == name
+        end
+      end
+    end
+
     class MagnetNovels
+      NAME = 'magnet-novels.com'
+
       API_GET_NOVEL_INFO = URI('https://www.magnet-novels.com/api/novel/reader/getNovelInfo')
       API_GET_NOVEL_CONTENTS = URI('https://www.magnet-novels.com/api/web/v2/reader/getNovelContents')
+
+      private_constant :API_GET_NOVEL_INFO, :API_GET_NOVEL_CONTENTS
 
       def rss(novel_id)
         novel_info_t = Thread.new do
@@ -61,7 +74,11 @@ module MangaNovelFeeds
     end
 
     class MangaCross
+      NAME = 'mangacross.jp'
+
       BASE_URI = URI('https://mangacross.jp')
+
+      private_constant :BASE_URI
 
       def rss(id)
         info = JSON.parse(
@@ -96,9 +113,4 @@ module MangaNovelFeeds
       end
     end
   end
-
-  PROVIDERS = {
-    'magnet-novels.com' => Providers::MagnetNovels.new,
-    'mangacross.jp' => Providers::MangaCross.new,
-  }
 end
