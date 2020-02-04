@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+ENV['TZ'] = 'UTC'
+
+require_relative '../lib/manga_novel_feeds'
+
+content_provider, content_id = *ARGV
+
+provider = MangaNovelFeeds::PROVIDERS.fetch(content_provider)
+rss = provider.rss(content_id)
+
+rss.items.each do |item|
+  puts <<EOS
+- #{item.title}
+  #{item.link}
+  #{item.date}
+EOS
+end
