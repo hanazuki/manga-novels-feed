@@ -8,7 +8,7 @@ Resources:
     Properties:
       CodeUri: functions/
       Handler: lambda/app.handler
-      Runtime: ruby2.5
+      Runtime: ruby2.7
       MemorySize: 512
       Timeout: 10
       Environment: {}
