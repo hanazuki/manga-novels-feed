@@ -1,5 +1,6 @@
 require 'json'
 require 'net/http'
+require 'nokogiri'
 require 'rss'
 require 'time'
 require 'uri'
@@ -110,6 +111,48 @@ module MangaNovelFeeds
             end
           end
         end
+      end
+    end
+
+    class Storia
+      NAME = 'storia.takeshobo.co.jp'
+
+      def rss(id)
+        index_uri = URI("https://storia.takeshobo.co.jp/manga/#{id}/")
+
+        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+
+        RSS::Maker.make('2.0') do |maker|
+          maker.channel.title = index.title
+          maker.channel.link = index_uri
+          maker.channel.description = index.css('.work_sammary').first.text
+
+          maker.items.do_sort = true
+
+          index.css('.box_episode > div').each do |ep|
+            next unless a = ep.css('a').first
+
+            maker.items.new_item do |item|
+              uri = item.link = index_uri + a.attr('href')
+              item.title = ep.css('.episode_title').text[/［.*/]
+              item.date = extract_date(ep.css('.episode_caption'))
+              item.guid.content = uri
+              item.guid.isPermaLink = true
+            end
+          end
+        end
+      end
+
+      private
+
+      def extract_date(el)
+        el.children.each do |c|
+          if /【公開日】(?<year>\d+)年(?<month>\d+)月(?<day>\d+)日/ =~ c.content
+            return Time.new(year.to_i, month.to_i, day.to_i, 0, 0, 0, '+09:00')
+          end
+        end
+
+        nil
       end
     end
   end
