@@ -13,6 +13,7 @@ module MangaNovelFeeds
           klass = const_get(const)
           return klass if klass.const_get(:NAME, false) == name
         end
+        raise KeyError, "#{name.inspect} is not found"
       end
     end
 
@@ -119,7 +120,6 @@ module MangaNovelFeeds
 
       def rss(id)
         index_uri = URI("https://storia.takeshobo.co.jp/manga/#{id}/")
-
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
@@ -153,6 +153,35 @@ module MangaNovelFeeds
         end
 
         nil
+      end
+    end
+
+    class GanganOnline
+      NAME = 'ganganonline.com'
+
+      def rss(id)
+        index_uri = URI("https://www.ganganonline.com/contents/#{id}/")
+        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+
+        RSS::Maker.make('2.0') do |maker|
+          maker.channel.title = index.title
+          maker.channel.link = index_uri
+          maker.channel.description = index.css('#gn_detail_header .gn_detail_header_txt').first.text
+
+          maker.items.do_sort = true
+
+          maker.items.new_item do |item|
+            entry = index.css('.gn_detail_story_list').first
+            link = entry.css('.gn_detail_story_btn a').find {|a| a.attr('href').start_with?('https://viewer.ganganonline.com/') }
+            time = Time.strptime(entry.css('.gn_detail_story_list_date').first.text + ' +0900', '%Y.%m.%d %z')
+
+            url = item.link = link.attr('href')
+            item.title = entry.css('.gn_detail_story_list_ttl').first.text.sub(/ 公開!\z/, '')
+            item.date = time
+            item.guid.content = url
+            item.guid.isPermaLink = true
+          end
+        end
       end
     end
   end
