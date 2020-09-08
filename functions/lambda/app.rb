@@ -1,17 +1,17 @@
 ENV['TZ'] = 'UTC'
 
+require 'json'
 require 'digest/sha1'
 require_relative '../lib/manga_novel_feeds'
 
-$providers = {}
+$providers = Hash.new {|h, k| h[k] = MangaNovelFeeds::Providers.find(k).new }
 
 def handler(event:, context:)
+  puts JSON.dump(event['pathParameters'])
   content_provider = event['pathParameters'].fetch('contentProvider')
   content_id = event['pathParameters'].fetch('contentId')
 
-  provider = $providers[content_provider] ||= MangaNovelFeeds::Providers.find(content_provider).new
-  rss = provider.rss(content_id)
-
+  rss = $providers[content_provider].rss(content_id)
   rss_text = rss.to_s
   rss_etag = %{"#{Digest::SHA1.hexdigest(rss_text)}"}
 
