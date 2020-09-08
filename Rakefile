@@ -11,6 +11,6 @@ task :validate do
   sh 'sam', 'validate'
 end
 
-task :deploy => [:validate, :build] do
+task :deploy => :build do
   sh 'sam', 'deploy'
 end
