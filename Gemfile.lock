@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/hanazuki/sam-build-fast.git
-  revision: 932e72d05bdb8c52394a747eb8f7805027127f65
+  revision: c51c491ea51b52fc82c4f4231706d5aabc4379e4
   specs:
     sam-build-fast (0.0.0)
 
