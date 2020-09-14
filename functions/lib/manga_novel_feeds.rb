@@ -184,5 +184,38 @@ module MangaNovelFeeds
         end
       end
     end
+
+    class UraSunday
+      NAME = 'urasunday.com'
+
+      def rss(id)
+        index_uri = URI("https://urasunday.com/title/#{id}")
+        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+
+        RSS::Maker.make('2.0') do |maker|
+          maker.channel.title = index.title
+          maker.channel.link = index_uri
+          maker.channel.description = index.at_css('meta[name="description"]').attr('content')
+
+          maker.items.do_sort = true
+
+          index.css('.chapter li:not(.charge)').each do |entry|
+            link = entry.at_css('a')
+            divs = link.css('div > div').to_a
+            fail 'Unexptected HTML structure' unless divs.size == 3
+            time = Time.strptime(divs[2].text + ' +0900', '%Y/%m/%d %z')
+            title = divs[...2].map(&:text).join(?\s)
+
+            maker.items.new_item do |item|
+              uri = item.link = index_uri + link.attr('href')
+              item.title = title
+              item.date = time
+              item.guid.content = uri
+              item.guid.isPermaLink = true
+            end
+          end
+        end
+      end
+    end
   end
 end
