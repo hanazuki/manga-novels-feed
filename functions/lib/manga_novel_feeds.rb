@@ -201,7 +201,7 @@ module MangaNovelFeeds
 
           index.css('.chapter li:not(.charge)').each do |entry|
             link = entry.at_css('a')
-            divs = link.css('div > div').to_a
+            divs = link.css('div > div:not(.new)').to_a
             fail 'Unexptected HTML structure' unless divs.size == 3
             time = Time.strptime(divs[2].text + ' +0900', '%Y/%m/%d %z')
             title = divs[...2].map(&:text).join(?\s)
