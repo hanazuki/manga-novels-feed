@@ -125,12 +125,12 @@ module MangaNovelFeeds
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
           maker.channel.link = index_uri
-          maker.channel.description = index.css('.work_sammary').first.text
+          maker.channel.description = index.at_css('.work_sammary').text
 
           maker.items.do_sort = true
 
           index.css('.box_episode > div').each do |ep|
-            next unless a = ep.css('a').first
+            next unless a = ep.at_css('a')
 
             maker.items.new_item do |item|
               uri = item.link = index_uri + a.attr('href')
@@ -166,17 +166,17 @@ module MangaNovelFeeds
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
           maker.channel.link = index_uri
-          maker.channel.description = index.css('#gn_detail_header .gn_detail_header_txt').first.text
+          maker.channel.description = index.at_css('#gn_detail_header .gn_detail_header_txt').text
 
           maker.items.do_sort = true
 
           maker.items.new_item do |item|
-            entry = index.css('.gn_detail_story_list').first
+            entry = index.at_css('.gn_detail_story_list')
             link = entry.css('.gn_detail_story_btn a').find {|a| a.attr('href').start_with?('https://viewer.ganganonline.com/') }
-            time = Time.strptime(entry.css('.gn_detail_story_list_date').first.text + ' +0900', '%Y.%m.%d %z')
+            time = Time.strptime(entry.at_css('.gn_detail_story_list_date').text + ' +0900', '%Y.%m.%d %z')
 
             url = item.link = link.attr('href')
-            item.title = entry.css('.gn_detail_story_list_ttl').first.text.sub(/ 公開!\z/, '')
+            item.title = entry.at_css('.gn_detail_story_list_ttl').text.sub(/ 公開!\z/, '')
             item.date = time
             item.guid.content = url
             item.guid.isPermaLink = true
