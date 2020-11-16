@@ -217,5 +217,45 @@ module MangaNovelFeeds
         end
       end
     end
+
+    class WebNewType
+      NAME = 'comic.webnewtype.com'
+
+      def rss(id)
+        index_uri = URI("https://comic.webnewtype.com/contents/#{id}/")
+        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+
+        RSS::Maker.make('2.0') do |maker|
+          maker.channel.title = index.title
+          maker.channel.link = index_uri
+          maker.channel.description = index.at_css('#WorkInfo-tab1 p').text
+
+          maker.items.do_sort = true
+
+          # Assume the latest chapter is published within 1 year
+          today = Date.today
+          last_y, last_md = today.year, [today.month, today.day]
+
+          index.css('#episodeList li:not(.deliveryContentsSaleAD)').each do |entry|
+            link = entry.at_css('a')
+            title = entry.at_css('.description').text.strip
+            next unless /(?<month>\d+)月(?<day>\d+)日配信/ =~ entry.at_css('.date01').text
+
+            md = [month.to_i, day.to_i]
+            last_y -= 1 if (md <=> last_md) > 0
+            date = Time.new(last_y, *md)
+            last_md = md
+
+            maker.items.new_item do |item|
+              uri = item.link = index_uri + link.attr('href')
+              item.title = title
+              item.date = date
+              item.guid.content = uri
+              item.guid.isPermaLink = true
+            end
+          end
+        end
+      end
+    end
   end
 end
