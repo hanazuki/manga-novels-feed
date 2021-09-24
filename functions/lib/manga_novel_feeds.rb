@@ -8,18 +8,23 @@ require 'uri'
 module MangaNovelFeeds
   module Providers
     class << self
-      def find(name)
-        constants(false).each do |const|
-          klass = const_get(const)
-          return klass if klass.const_get(:NAME, false) == name
-        rescue NameError
-          next
-        end
-        raise KeyError, "#{name.inspect} is not found"
+      def providers
+        @providers ||= {}
+      end
+
+      def find(provider_id)
+        providers.fetch(provider_id)
       end
     end
 
     class Base
+      class << self
+        private
+
+        def provider_id(provider_id)
+          Providers::providers[provider_id] = self
+        end
+      end
 
       private
 
@@ -29,7 +34,7 @@ module MangaNovelFeeds
     end
 
     class MagnetNovels < Base
-      NAME = 'magnet-novels.com'
+      provider_id 'magnet-novels.com'
 
       API_GET_NOVEL_INFO = URI('https://www.magnet-novels.com/api/novel/reader/getNovelInfo')
       API_GET_NOVEL_CONTENTS = URI('https://www.magnet-novels.com/api/web/v2/reader/getNovelContents')
@@ -87,7 +92,7 @@ module MangaNovelFeeds
     end
 
     class MangaCross < Base
-      NAME = 'mangacross.jp'
+      provider_id 'mangacross.jp'
 
       BASE_URI = URI('https://mangacross.jp')
 
@@ -127,7 +132,7 @@ module MangaNovelFeeds
     end
 
     class Storia < Base
-      NAME = 'storia.takeshobo.co.jp'
+      provider_id 'storia.takeshobo.co.jp'
 
       def rss(id)
         index_uri = URI("https://storia.takeshobo.co.jp/manga/#{u id}/")
@@ -168,7 +173,7 @@ module MangaNovelFeeds
     end
 
     class GanganOnline < Base
-      NAME = 'ganganonline.com'
+      provider_id 'ganganonline.com'
 
       def rss(id)
         index_uri = URI("https://www.ganganonline.com/contents/#{u id}/")
@@ -197,7 +202,7 @@ module MangaNovelFeeds
     end
 
     class UraSunday < Base
-      NAME = 'urasunday.com'
+      provider_id 'urasunday.com'
 
       def rss(id)
         index_uri = URI("https://urasunday.com/title/#{u id}")
@@ -230,7 +235,7 @@ module MangaNovelFeeds
     end
 
     class WebNewType < Base
-      NAME = 'comic.webnewtype.com'
+      provider_id 'comic.webnewtype.com'
 
       def rss(id)
         index_uri = URI("https://comic.webnewtype.com/contents/#{u id}/")
@@ -270,7 +275,7 @@ module MangaNovelFeeds
     end
 
     class WebAce < Base
-      NAME = 'web-ace.jp'
+      provider_id 'web-ace.jp'
 
       def rss(id)
         sub, id = id.split(':', 2)
