@@ -176,26 +176,32 @@ module MangaNovelFeeds
       provider_id 'ganganonline.com'
 
       def rss(id)
-        index_uri = URI("https://www.ganganonline.com/contents/#{u id}/")
+        index_uri = URI("https://www.ganganonline.com/title/#{u id}")
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+
+        data = JSON.parse(index.at_css('#__NEXT_DATA__').text)
+        props = data.dig('props', 'pageProps', 'data', 'default')
 
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
           maker.channel.link = index_uri
-          maker.channel.description = index.at_css('#gn_detail_header .gn_detail_header_txt').text
+          maker.channel.description = props['description']
 
           maker.items.do_sort = true
 
-          maker.items.new_item do |item|
-            entry = index.at_css('.gn_detail_story_list')
-            link = entry.css('.gn_detail_story_btn a').find {|a| a.attr('href').start_with?('https://viewer.ganganonline.com/') }
-            time = Time.strptime(entry.at_css('.gn_detail_story_list_date').text + ' +0900', '%Y.%m.%d %z')
+          props['chapters'].each do |entry|
+            next unless /(?<year>\d+)\.(?<month>\d+)\.(?<mday>\d+)/ =~ entry['publishingPeriod']
+            date = Time.new(year.to_i, month.to_i, mday.to_i)
+            title = entry.values_at('mainText', 'subText').compact.join(?\s)
+            uri = "https://www.ganganonline.com/title/#{u id}/chapter/#{u entry['id']}"
 
-            url = item.link = link.attr('href')
-            item.title = entry.at_css('.gn_detail_story_list_ttl').text.sub(/ 公開!\z/, '')
-            item.date = time
-            item.guid.content = url
-            item.guid.isPermaLink = true
+            maker.items.new_item do |item|
+              item.link = uri
+              item.title = title
+              item.date = date
+              item.guid.content = uri
+              item.guid.isPermaLink = true
+            end
           end
         end
       end
