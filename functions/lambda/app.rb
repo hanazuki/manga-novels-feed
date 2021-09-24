@@ -12,7 +12,7 @@ def handler(event:, context:)
   content_provider = event['pathParameters'].fetch('contentProvider')
   content_id = event['pathParameters'].fetch('contentId')
 
-  rss = $providers[content_provider].rss(URI.encode_www_form_component(content_id).gsub(?+, '%20'))
+  rss = $providers[content_provider].rss(content_id)
   rss_text = rss.to_s
   rss_etag = %{"#{Digest::SHA1.hexdigest(rss_text)}"}
 

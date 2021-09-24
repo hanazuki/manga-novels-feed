@@ -12,12 +12,23 @@ module MangaNovelFeeds
         constants(false).each do |const|
           klass = const_get(const)
           return klass if klass.const_get(:NAME, false) == name
+        rescue NameError
+          next
         end
         raise KeyError, "#{name.inspect} is not found"
       end
     end
 
-    class MagnetNovels
+    class Base
+
+      private
+
+      def u(s)
+        URI.encode_www_form_component(s)
+      end
+    end
+
+    class MagnetNovels < Base
       NAME = 'magnet-novels.com'
 
       API_GET_NOVEL_INFO = URI('https://www.magnet-novels.com/api/novel/reader/getNovelInfo')
@@ -51,7 +62,7 @@ module MangaNovelFeeds
 
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = novel_info['data']['name']
-          maker.channel.link = "https://www.magnet-novels.com/novels/#{novel_id}"
+          maker.channel.link = "https://www.magnet-novels.com/novels/#{u novel_id}"
           maker.channel.description = novel_info['data']['synopsis']
 
           maker.items.do_sort = true
@@ -64,7 +75,7 @@ module MangaNovelFeeds
             end
 
             maker.items.new_item do |item|
-              url = item.link = "https://www.magnet-novels.com/novels/#{novel_id}/episodes/#{section['id']}"
+              url = item.link = "https://www.magnet-novels.com/novels/#{u novel_id}/episodes/#{u section['id']}"
               item.title = section['title']
               item.date = Time.parse(published_at)
               item.guid.content = url
@@ -75,7 +86,7 @@ module MangaNovelFeeds
       end
     end
 
-    class MangaCross
+    class MangaCross < Base
       NAME = 'mangacross.jp'
 
       BASE_URI = URI('https://mangacross.jp')
@@ -85,13 +96,13 @@ module MangaNovelFeeds
       def rss(id)
         info = JSON.parse(
           Net::HTTP.get(
-            URI("https://mangacross.jp/api/comics/#{id}.json"),
+            URI("https://mangacross.jp/api/comics/#{u id}.json"),
           )
         )
 
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = info['comic']['title']
-          maker.channel.link = "https://mangacross.jp/comics/#{id}"
+          maker.channel.link = "https://mangacross.jp/comics/#{u id}"
           maker.channel.description = info['comic']['seo_outline']
 
           maker.items.do_sort = true
@@ -115,11 +126,11 @@ module MangaNovelFeeds
       end
     end
 
-    class Storia
+    class Storia < Base
       NAME = 'storia.takeshobo.co.jp'
 
       def rss(id)
-        index_uri = URI("https://storia.takeshobo.co.jp/manga/#{id}/")
+        index_uri = URI("https://storia.takeshobo.co.jp/manga/#{u id}/")
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
@@ -156,11 +167,11 @@ module MangaNovelFeeds
       end
     end
 
-    class GanganOnline
+    class GanganOnline < Base
       NAME = 'ganganonline.com'
 
       def rss(id)
-        index_uri = URI("https://www.ganganonline.com/contents/#{id}/")
+        index_uri = URI("https://www.ganganonline.com/contents/#{u id}/")
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
@@ -185,11 +196,11 @@ module MangaNovelFeeds
       end
     end
 
-    class UraSunday
+    class UraSunday < Base
       NAME = 'urasunday.com'
 
       def rss(id)
-        index_uri = URI("https://urasunday.com/title/#{id}")
+        index_uri = URI("https://urasunday.com/title/#{u id}")
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
@@ -218,11 +229,11 @@ module MangaNovelFeeds
       end
     end
 
-    class WebNewType
+    class WebNewType < Base
       NAME = 'comic.webnewtype.com'
 
       def rss(id)
-        index_uri = URI("https://comic.webnewtype.com/contents/#{id}/")
+        index_uri = URI("https://comic.webnewtype.com/contents/#{u id}/")
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
@@ -258,13 +269,13 @@ module MangaNovelFeeds
       end
     end
 
-    class WebAce
+    class WebAce < Base
       NAME = 'web-ace.jp'
 
       def rss(id)
         sub, id = id.split(':', 2)
 
-        index_uri = URI("https://web-ace.jp/#{sub}/contents/#{id}/")
+        index_uri = URI("https://web-ace.jp/#{u sub}/contents/#{u id}/")
         index = Nokogiri::HTML(Net::HTTP.get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
