@@ -141,17 +141,18 @@ module MangaNovelFeeds
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
           maker.channel.link = index_uri
-          maker.channel.description = index.at_css('.work_sammary').text
+          maker.channel.description = index.xpath('//h2[text() = "ストーリー"]/following-sibling::p').text
 
           maker.items.do_sort = true
 
-          index.css('.box_episode > div').each do |ep|
-            next unless a = ep.at_css('a')
+          index.css('.episode').each do |ep|
+            next unless a = ep.ancestors('a').first
+            next unless date = extract_date(ep.xpath('./following-sibling::li[text() = "公開日"]/following-sibling::li[1]').text)
 
             maker.items.new_item do |item|
               uri = item.link = index_uri + a.attr('href')
-              item.title = ep.css('.episode_title').text[/［.*/]
-              item.date = extract_date(ep.css('.episode_caption'))
+              item.title = ep.text.strip
+              item.date = date
               item.guid.content = uri
               item.guid.isPermaLink = true
             end
@@ -161,14 +162,10 @@ module MangaNovelFeeds
 
       private
 
-      def extract_date(el)
-        el.children.each do |c|
-          if /【公開日】(?<year>\d+)年(?<month>\d+)月(?<day>\d+)日/ =~ c.content
-            return Time.new(year.to_i, month.to_i, day.to_i, 0, 0, 0, '+09:00')
-          end
+      def extract_date(s)
+        if /(?<year>\d+)年(?<month>\d+)月(?<day>\d+)日/ =~ s
+          Time.new(year.to_i, month.to_i, day.to_i, 0, 0, 0, '+09:00')
         end
-
-        nil
       end
     end
 
