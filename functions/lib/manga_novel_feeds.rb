@@ -247,26 +247,17 @@ module MangaNovelFeeds
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
           maker.channel.link = index_uri
-          maker.channel.description = index.at_css('#WorkInfo-tab1 p').text
+          maker.channel.description = index.at_css('.content__desc-comic .contents__txt--desc').text
 
           maker.items.do_sort = true
 
-          # Assume the latest chapter is published within 1 year
-          today = Date.today
-          last_y, last_md = today.year, [today.month, today.day]
-
-          index.css('#episodeList li:not(.deliveryContentsSaleAD)').each do |entry|
-            link = entry.at_css('a')
-            title = entry.at_css('.description').text.strip
-            next unless /(?<month>\d+)月(?<day>\d+)日配信/ =~ entry.at_css('.date01').text
-
-            md = [month.to_i, day.to_i]
-            last_y -= 1 if (md <=> last_md) > 0
-            date = Time.new(last_y, *md)
-            last_md = md
+          index.css('#episodeListDsc li a').each do |entry|
+            title = entry.at_css('.detail__txt--ttl-sub').text.strip
+            next unless %r{(?<year>\d+)/(?<month>\d+)/(?<day>\d+)} =~ entry.at_css('.detail__txt--date').text
+            date = Time.new(year.to_i, month.to_i, day.to_i)
 
             maker.items.new_item do |item|
-              uri = item.link = index_uri + link.attr('href')
+              uri = item.link = index_uri + entry.attr('href')
               item.title = title
               item.date = date
               item.guid.content = uri
