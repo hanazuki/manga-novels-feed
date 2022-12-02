@@ -163,7 +163,7 @@ module MangaNovelFeeds
       private
 
       def extract_date(s)
-        if /(?<year>\d+)年(?<month>\d+)月(?<day>\d+)日/ =~ s
+        if /(?<year>\d+)年\s*(?<month>\d+)月\s*(?<day>\d+)日/ =~ s
           Time.new(year.to_i, month.to_i, day.to_i, 0, 0, 0, '+09:00')
         end
       end
