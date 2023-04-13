@@ -288,7 +288,7 @@ module MangaNovelFeeds
             next unless m = entry.at_css('.media-body')
 
             title = m.at_css('p').text
-            next unless /(?<year>\d+)年(?<month>\d+)月(?<mday>\d+)日/ =~ m.at_css('.updated-date').text
+            next unless /(?<year>\d+)\.(?<month>\d+)\.(?<mday>\d+)/ =~ m.at_css('.updated-date').text
             date = Time.new(year.to_i, month.to_i, mday.to_i)
 
             maker.items.new_item do |item|
