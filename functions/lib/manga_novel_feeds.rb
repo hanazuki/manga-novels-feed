@@ -6,6 +6,14 @@ require 'time'
 require 'uri'
 
 module MangaNovelFeeds
+  class Redirect < Exception
+    attr_reader :target
+
+    def initialize(target)
+      @target = target
+    end
+  end
+
   module Providers
     class << self
       def providers
@@ -273,33 +281,7 @@ module MangaNovelFeeds
 
       def rss(id)
         sub, id = id.split(':', 2)
-
-        index_uri = URI("https://web-ace.jp/#{u sub}/contents/#{u id}/")
-        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
-
-        RSS::Maker.make('2.0') do |maker|
-          maker.channel.title = index.at_css("#sakuhin-info .credit h1").text
-          maker.channel.link = index_uri
-          maker.channel.description = index.at_css("#sakuhin-info .description p:not(.subtitle)").text
-
-          maker.items.do_sort = true
-
-          index.css('#read a').each do |entry|
-            next unless m = entry.at_css('.media-body')
-
-            title = m.at_css('p').text
-            next unless /(?<year>\d+)\.(?<month>\d+)\.(?<mday>\d+)/ =~ m.at_css('.updated-date').text
-            date = Time.new(year.to_i, month.to_i, mday.to_i)
-
-            maker.items.new_item do |item|
-              uri = item.link = index_uri + entry.attr('href')
-              item.title = title
-              item.date = date
-              item.guid.content = uri
-              item.guid.isPermaLink = true
-            end
-          end
-        end
+        raise Redirect, "https://web-ace.jp/#{u sub}/feed/rss/#{u id}/"
       end
     end
   end
