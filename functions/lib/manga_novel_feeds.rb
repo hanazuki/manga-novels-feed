@@ -39,6 +39,13 @@ module MangaNovelFeeds
       def u(s)
         URI.encode_www_form_component(s)
       end
+
+      def http_get(uri)
+        header = {
+          'User-Agent' => 'manga-novels-feed (+https://github.com/hanazuki/manga-novels-feed)',
+        }
+        Net::HTTP.get(uri, header)
+      end
     end
 
     class MagnetNovels < Base
@@ -108,9 +115,7 @@ module MangaNovelFeeds
 
       def rss(id)
         info = JSON.parse(
-          Net::HTTP.get(
-            URI("https://mangacross.jp/api/comics/#{u id}.json"),
-          )
+          http_get("https://mangacross.jp/api/comics/#{u id}.json"),
         )
 
         RSS::Maker.make('2.0') do |maker|
@@ -144,7 +149,7 @@ module MangaNovelFeeds
 
       def rss(id)
         index_uri = URI("https://storia.takeshobo.co.jp/manga/#{u id}/")
-        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+        index = Nokogiri::HTML(http_get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
@@ -182,7 +187,7 @@ module MangaNovelFeeds
 
       def rss(id)
         index_uri = URI("https://www.ganganonline.com/title/#{u id}")
-        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+        index = Nokogiri::HTML(http_get(index_uri))
 
         data = JSON.parse(index.at_css('#__NEXT_DATA__').text)
         props = data.dig('props', 'pageProps', 'data', 'default')
@@ -217,7 +222,7 @@ module MangaNovelFeeds
 
       def rss(id)
         index_uri = URI("https://urasunday.com/title/#{u id}")
-        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+        index = Nokogiri::HTML(http_get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
@@ -250,7 +255,7 @@ module MangaNovelFeeds
 
       def rss(id)
         index_uri = URI("https://comic.webnewtype.com/contents/#{u id}/")
-        index = Nokogiri::HTML(Net::HTTP.get(index_uri))
+        index = Nokogiri::HTML(http_get(index_uri))
 
         RSS::Maker.make('2.0') do |maker|
           maker.channel.title = index.title
@@ -282,6 +287,39 @@ module MangaNovelFeeds
       def rss(id)
         sub, id = id.split(':', 2)
         raise Redirect, "https://web-ace.jp/#{u sub}/feed/rss/#{u id}/"
+      end
+    end
+
+    class ComicWalker < Base
+      provider_id 'comic-walker.com'
+
+      def rss(id)
+        json_uri = URI("https://comic-walker.com/api/contents/details/work?workCode=#{u id}")
+        json = JSON.parse(http_get(json_uri))
+
+        RSS::Maker.make('2.0') do |maker|
+          work = json.fetch('work')
+
+          maker.channel.title = work.fetch('title')
+          maker.channel.link = "https://comic-walker.com/detail/#{u id}"
+          maker.channel.description = work.fetch('summary')
+
+          maker.items.do_sort = true
+
+          episodes = json.dig('latestEpisodes').fetch('result')
+
+          episodes.each do |ep|
+            next unless ep.fetch('isActive')
+
+            maker.items.new_item do |item|
+              url = item.link = "https://comic-walker.com/detail/#{u id}/episodes/#{u ep.fetch('code')}?episodeType=first"
+              item.title = ep.fetch('title')
+              item.date = Time.parse(ep.fetch('updateDate'))
+              item.guid.content = url
+              item.guid.isPermaLink = true
+            end
+          end
+        end
       end
     end
   end
