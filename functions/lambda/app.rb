@@ -33,5 +33,9 @@ def handler(event:, context:)
         'Location' => e.target,
       },
     }
+  rescue MangaNovelFeeds::Gone => e
+    {
+      'statusCode' => 410,
+    }
   end
 end

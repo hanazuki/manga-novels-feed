@@ -14,6 +14,9 @@ module MangaNovelFeeds
     end
   end
 
+  class Gone < Exception
+  end
+
   module Providers
     class << self
       def providers
@@ -51,39 +54,7 @@ module MangaNovelFeeds
     class Storia < Base
       provider_id 'storia.takeshobo.co.jp'
 
-      def rss(id)
-        index_uri = URI("https://storia.takeshobo.co.jp/manga/#{u id}/")
-        index = Nokogiri::HTML(http_get(index_uri))
-
-        RSS::Maker.make('2.0') do |maker|
-          maker.channel.title = index.title
-          maker.channel.link = index_uri
-          maker.channel.description = index.xpath('//h2[text() = "ストーリー"]/following-sibling::p').text
-
-          maker.items.do_sort = true
-
-          index.css('.episode').each do |ep|
-            next unless a = ep.ancestors('a').first
-            next unless date = extract_date(ep.xpath('./following-sibling::li[text() = "公開日"]/following-sibling::li[1]').text)
-
-            maker.items.new_item do |item|
-              uri = item.link = index_uri + a.attr('href')
-              item.title = ep.text.strip
-              item.date = date
-              item.guid.content = uri
-              item.guid.isPermaLink = true
-            end
-          end
-        end
-      end
-
-      private
-
-      def extract_date(s)
-        if /(?<year>\d+)年\s*(?<month>\d+)月\s*(?<day>\d+)日/ =~ s
-          Time.new(year.to_i, month.to_i, day.to_i, 0, 0, 0, '+09:00')
-        end
-      end
+      def rss(id) = raise Gone
     end
 
     class GanganOnline < Base
@@ -124,34 +95,7 @@ module MangaNovelFeeds
     class UraSunday < Base
       provider_id 'urasunday.com'
 
-      def rss(id)
-        index_uri = URI("https://urasunday.com/title/#{u id}")
-        index = Nokogiri::HTML(http_get(index_uri))
-
-        RSS::Maker.make('2.0') do |maker|
-          maker.channel.title = index.title
-          maker.channel.link = index_uri
-          maker.channel.description = index.at_css('meta[name="description"]').attr('content')
-
-          maker.items.do_sort = true
-
-          index.css('.chapter li:not(.charge)').each do |entry|
-            link = entry.at_css('a')
-            divs = link.css('div > div:not(.new)').to_a
-            fail 'Unexptected HTML structure' unless divs.size == 3
-            time = Time.strptime(divs[2].text + ' +0900', '%Y/%m/%d %z')
-            title = divs[...2].map(&:text).join(?\s)
-
-            maker.items.new_item do |item|
-              uri = item.link = index_uri + link.attr('href')
-              item.title = title
-              item.date = time
-              item.guid.content = uri
-              item.guid.isPermaLink = true
-            end
-          end
-        end
-      end
+      def rss(id) = raise Gone  # TODO: manga-one.com
     end
 
     class WebAce < Base
