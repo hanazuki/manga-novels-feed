@@ -5,15 +5,21 @@ require 'digest/sha1'
 require 'uri'
 require_relative '../lib/manga_novel_feeds'
 
-$providers = Hash.new {|h, k| h[k] = MangaNovelFeeds::Providers.find(k).new }
+$providers = Hash.new {|h, k| h[k] = MangaNovelFeeds::Providers.find(k)&.new }
 
 def handler(event:, context:)
   puts JSON.dump(event['pathParameters'])
   content_provider = event['pathParameters'].fetch('contentProvider')
   content_id = event['pathParameters'].fetch('contentId')
 
+  unless provider = $providers[content_provider]
+    return {
+      'statusCode' => 404,
+    }
+  end
+
   begin
-    rss = $providers[content_provider].rss(content_id)
+    rss = provider.rss(content_id)
     rss_text = rss.to_s
     rss_etag = %{"#{Digest::SHA1.hexdigest(rss_text)}"}
 

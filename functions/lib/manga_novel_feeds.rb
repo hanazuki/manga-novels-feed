@@ -24,7 +24,7 @@ module MangaNovelFeeds
       end
 
       def find(provider_id)
-        providers.fetch(provider_id)
+        providers[provider_id]
       end
     end
 
